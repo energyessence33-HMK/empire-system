@@ -16,7 +16,7 @@ flowchart LR
 
   %% API Layer
   LB --> APIGW[API Gateway / Edge Proxy]
-  APIGW --> Auth[Auth Service\n(OAuth / JWT)]
+  APIGW --> Auth[Auth Service<br/>(OAuth / JWT)]
   APIGW --> BFF[Backend-for-Frontend]
 
   %% Application Services
@@ -34,13 +34,13 @@ flowchart LR
   APIGW --> NotificationSvc
 
   %% Data & Storage
-  DB[(Primary DB\n(Postgres / RDS))] 
+  DB[(Primary DB<br/>(Postgres / RDS))] 
   Replica[(Read Replica)]
   DB --> Replica
 
-  ObjectStore[(Object Storage\nS3 / Blob)]
+  ObjectStore[(Object Storage<br/>S3 / Blob)]
   Cache[(Redis / Memcached)]
-  MQ[(Message Broker\nKafka / RabbitMQ)]
+  MQ[(Message Broker<br/>Kafka / RabbitMQ)]
 
   OrderSvc -->|read/write| DB
   ProductSvc -->|read-mostly| Replica
@@ -54,14 +54,14 @@ flowchart LR
   %% Cross-cutting concerns
   Auth --> Cache
   Auth --> DB
-  Services -.->|logs & traces| Logging[Logging & Tracing\n(ELK / Loki / Jaeger)]
-  Services -.->|metrics| Monitoring[Monitoring\n(Prometheus + Grafana)]
+  Services -.->|logs & traces| Logging[Logging & Tracing<br/>(ELK / Loki / Jaeger)]
+  Services -.->|metrics| Monitoring[Monitoring<br/>(Prometheus + Grafana)]
 
   CI[CI/CD Pipeline]
   CI -->|build & deploy| Services
   CI -->|db migrations| DB
 
-  ThirdParty[Third-Party APIs\n(payment, email, analytics)]
+  ThirdParty[Third-Party APIs<br/>(payment, email, analytics)]
   BillingSvc --> ThirdParty
   NotificationSvc --> ThirdParty
 
