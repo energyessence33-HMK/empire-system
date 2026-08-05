@@ -1,71 +1,94 @@
 # Architecture Overview
 
-This diagram shows a high-level architecture for a typical web/mobile application: clients -> edge -> API layer -> services -> data/storage -> supporting infra (cache, message broker, monitoring, CI/CD).
+This file contains the Mermaid source and a generated SVG will be produced by CI so the diagram displays reliably on GitHub.
 
-```mermaid
+Mermaid source (also saved as docs/architecture-overview.mmd):
+
+````mermaid
 flowchart LR
-  %% Clients / Edge
-  subgraph Clients
-    Web[Web App<br/>Browser]
-    Mobile[Mobile App]
-  end
 
-  CDN[CDN / WAF] -->|static assets| Web
-  CDN --> Mobile
-  CDN --> LB[Load Balancer]
+subgraph Clients
+    Web["Web App Browser"]
+    Mobile["Mobile App"]
+end
 
-  %% API Layer
-  LB --> APIGW[API Gateway / Edge Proxy]
-  APIGW --> Auth[Auth Service<br/>(OAuth / JWT)]
-  APIGW --> BFF[Backend-for-Frontend]
+CDN["CDN / WAF"] -->|static assets| Web
+CDN --> Mobile
+CDN --> LB["Load Balancer"]
 
-  %% Application Services
-  subgraph Services[Microservices]
+LB --> APIGW["API Gateway"]
+APIGW --> Auth["Auth Service (OAuth / JWT)"]
+APIGW --> BFF["Backend for Frontend"]
+
+subgraph Services
     direction TB
-    OrderSvc[Orders Service]
-    ProductSvc[Products Service]
-    BillingSvc[Billing Service]
-    NotificationSvc[Notification Service]
-  end
+    OrderSvc["Orders Service"]
+    ProductSvc["Products Service"]
+    BillingSvc["Billing Service"]
+    NotificationSvc["Notification Service"]
+end
 
-  APIGW -->|REST / gRPC| OrderSvc
-  APIGW --> ProductSvc
-  APIGW --> BillingSvc
-  APIGW --> NotificationSvc
+APIGW -->|REST / gRPC| OrderSvc
+APIGW --> ProductSvc
+APIGW --> BillingSvc
+APIGW --> NotificationSvc
 
-  %% Data & Storage
-  DB[(Primary DB<br/>(Postgres / RDS))] 
-  Replica[(Read Replica)]
-  DB --> Replica
+DB[(Primary Database)]
+Replica[(Read Replica)]
+DB --> Replica
 
-  ObjectStore[(Object Storage<br/>S3 / Blob)]
-  Cache[(Redis / Memcached)]
-  MQ[(Message Broker<br/>Kafka / RabbitMQ)]
+ObjectStore[(Object Storage)]
+Cache[(Redis Cache)]
+MQ[(Message Broker)]
 
-  OrderSvc -->|read/write| DB
-  ProductSvc -->|read-mostly| Replica
-  BillingSvc -->|transactions| DB
-  Services --> Cache
-  Services --> MQ
-  NotificationSvc --> ObjectStore
-  MQ --> Worker[Background Workers / Consumers]
-  Worker -->|persist results| DB
+OrderSvc --> DB
+ProductSvc --> Replica
+BillingSvc --> DB
 
-  %% Cross-cutting concerns
-  Auth --> Cache
-  Auth --> DB
-  Services -.->|logs & traces| Logging[Logging & Tracing<br/>(ELK / Loki / Jaeger)]
-  Services -.->|metrics| Monitoring[Monitoring<br/>(Prometheus + Grafana)]
+OrderSvc --> Cache
+ProductSvc --> Cache
+BillingSvc --> Cache
+NotificationSvc --> Cache
 
-  CI[CI/CD Pipeline]
-  CI -->|build & deploy| Services
-  CI -->|db migrations| DB
+OrderSvc --> MQ
+ProductSvc --> MQ
+BillingSvc --> MQ
+NotificationSvc --> MQ
 
-  ThirdParty[Third-Party APIs<br/>(payment, email, analytics)]
-  BillingSvc --> ThirdParty
-  NotificationSvc --> ThirdParty
+NotificationSvc --> ObjectStore
 
-  %% Notes
-  classDef infra fill:#f9f9f9,stroke:#333,stroke-width:1px;
-  class CDN,LB,APIGW,DB,Replica,ObjectStore,Cache,MQ,Logging,Monitoring,CI,ThirdParty infra;
-```
+MQ --> Worker["Background Workers"]
+
+Worker --> DB
+
+Auth --> Cache
+Auth --> DB
+
+OrderSvc -.-> Logging["Logging & Tracing"]
+ProductSvc -.-> Logging
+BillingSvc -.-> Logging
+NotificationSvc -.-> Logging
+
+OrderSvc -.-> Monitoring["Monitoring"]
+ProductSvc -.-> Monitoring
+BillingSvc -.-> Monitoring
+NotificationSvc -.-> Monitoring
+
+CI["CI/CD Pipeline"]
+
+CI --> OrderSvc
+CI --> ProductSvc
+CI --> BillingSvc
+CI --> NotificationSvc
+
+CI --> DB
+
+ThirdParty["Third Party APIs"]
+
+BillingSvc --> ThirdParty
+NotificationSvc --> ThirdParty
+````
+
+Notes:
+- A GitHub Action in .github/workflows/render-mermaid.yml will render docs/architecture-overview.mmd to docs/architecture-overview.svg on push.
+- If you prefer PNG instead of SVG, I can update the workflow to output PNG.
